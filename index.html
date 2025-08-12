@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷你世界颜色代码工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .tool-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .author {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .color-preview {
+            width: 100%;
+            height: 100px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            transition: background-color 0.3s;
+        }
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        .slider-container {
+            margin: 15px 0;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+        .code-result {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .code-result label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .code-result input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <h1>迷你世界颜色代码工具</h1>
+        <div class="author">迷你号: 1417492990</div>
+        
+        <input type="color" id="colorPicker" value="#ff0000">
+        
+        <div class="slider-container">
+            <label for="saturation">饱和度</label>
+            <input type="range" id="saturation" min="0" max="200" value="100">
+            <div class="value-display"><span id="saturationValue">100</span>%</div>
+        </div>
+        
+        <div class="slider-container">
+            <label for="brightness">亮度</label>
+            <input type="range" id="brightness" min="0" max="200" value="100">
+            <div class="value-display"><span id="brightnessValue">100</span>%</div>
+        </div>
+        
+        <div class="color-preview" id="colorPreview"></div>
+        
+        <div class="code-result">
+            <label>RGB 颜色值</label>
+            <input type="text" id="rgbCode" value="rgb(255, 0, 0)" readonly>
+        </div>
+        
+        <div class="code-result">
+            <label>16进制颜色代码</label>
+            <input type="text" id="hexCode" value="#FF0000" readonly>
+        </div>
+        
+        <div class="code-result">
+            <label>迷你世界颜色代码</label>
+            <input type="text" id="miniCode" value="#cFF0000" readonly>
+        </div>
+        
+        <div class="note">
+            * 迷你世界颜色代码格式为 #c + 6位16进制颜色值（如 #cFFFFFF）<br>
+            * 所有修改都会自动实时更新颜色和代码
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const colorPicker = document.getElementById('colorPicker');
+        const saturationSlider = document.getElementById('saturation');
+        const brightnessSlider = document.getElementById('brightness');
+        const saturationValue = document.getElementById('saturationValue');
+        const brightnessValue = document.getElementById('brightnessValue');
+        const colorPreview = document.getElementById('colorPreview');
+        const rgbCode = document.getElementById('rgbCode');
+        const hexCode = document.getElementById('hexCode');
+        const miniCode = document.getElementById('miniCode');
+        
+        // 初始化
+        updateAll();
+        
+        // 事件监听
+        colorPicker.addEventListener('input', updateAll);
+        saturationSlider.addEventListener('input', function() {
+            saturationValue.textContent = this.value;
+            updateAll();
+        });
+        brightnessSlider.addEventListener('input', function() {
+            brightnessValue.textContent = this.value;
+            updateAll();
+        });
+        
+        // 主更新函数
+        function updateAll() {
+            const baseColor = colorPicker.value;
+            const saturation = parseInt(saturationSlider.value) / 100;
+            const brightness = parseInt(brightnessSlider.value) / 100;
+            
+            // 应用饱和度和亮度调整
+            const adjustedColor = adjustColor(baseColor, saturation, brightness);
+            
+            // 更新预览和代码
+            colorPreview.style.backgroundColor = adjustedColor;
+            updateColorCodes(adjustedColor);
+        }
+        
+        // 颜色调整函数（简化版HSL调整）
+        function adjustColor(hexColor, saturation, brightness) {
+            // 将16进制转换为RGB
+            let r = parseInt(hexColor.substr(1, 2), 16);
+            let g = parseInt(hexColor.substr(3, 2), 16);
+            let b = parseInt(hexColor.substr(5, 2), 16);
+            
+            // 计算灰度值
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            
+            // 应用饱和度
+            r = gray + (r - gray) * saturation;
+            g = gray + (g - gray) * saturation;
+            b = gray + (b - gray) * saturation;
+            
+            // 应用亮度
+            r *= brightness;
+            g *= brightness;
+            b *= brightness;
+            
+            // 确保值在0-255范围内
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+            
+            // 转换回16进制
+            return rgbToHex(Math.round(r), Math.round(g), Math.round(b));
+        }
+        
+        // RGB转16进制
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join("").toUpperCase();
+        }
+        
+        // 更新所有颜色代码
+        function updateColorCodes(hexColor) {
+            // 获取RGB值
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            
+            // 更新RGB代码
+            rgbCode.value = `rgb(${r}, ${g}, ${b})`;
+            
+            // 更新16进制代码
+            hexCode.value = hexColor.toUpperCase();
+            
+            // 更新迷你世界代码
+            miniCode.value = `#c${hexColor.substr(1).toUpperCase()}`;
+        }
+    </script>
+</body>
+</html>
